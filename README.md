@@ -26,18 +26,15 @@ bun run typecheck
 
 | File | Pattern |
 |---|---|
+| `index.ts` | Pipeline basics: chained steps |
+| `01-prompt-chaining.ts` | Prompt chaining |
+| `02-router.ts` | Router: classify intent, then route |
+| `03-parallel-fanout.ts` | `.parallel` branches, then combine |
 | `00-basic-pipeline.ts` | Clean input, then summarize |
-| `01-copy-chain.ts` | Prompt chaining: draft → edit → translate |
-| `02-support-router.ts` | Router: classify intent, reply with the matching prompt |
-| `03-extract-company.ts` | Search, then `.extract` structured data (Tavily is stubbed) |
-| `04-evaluator-optimizer.ts` | Draft → evaluate → revise |
-| `05-parallel-review.ts` | `.parallel` specialists, then synthesize a verdict |
+| `04-extract-company.ts` | Search, then `.extract` structured data (Tavily is stubbed) |
+| `05-evaluator-optimizer.ts` | Draft → evaluate → revise |
 | `06-plan-and-execute.ts` | Plan steps, execute them with `Promise.all` |
 | `07-assistant-decision.ts` | Decide an action, then act |
 | `08-observer.ts` | `observer.onEvent` and `graph()` |
 
-`helpers.ts` provides `ask()` and the stubbed `tavilyClient`. Shared model setup lives in `src/shared.ts`.
-
-## Class notes
-
-`src/01-prompt-chaining.ts`, `src/02-router.ts`, `src/03-parallel-fanout.ts` and `src/index.ts` are the live-coding versions written in class.
+`01`–`03` and `index.ts` are the versions taught in class and use `askAi` from `shared.ts`. The rest use `ask()` and the stubbed `tavilyClient` from `helpers.ts`.
