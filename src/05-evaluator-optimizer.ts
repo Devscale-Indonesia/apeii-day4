@@ -9,31 +9,33 @@
  */
 import { Pipeline } from "@anvia/core/pipeline";
 import z from "zod";
-import { ask, generateCompletion, model } from "./helpers";
+import { askAi, askAiJson } from "./shared";
 
 const Request = z.object({ request: z.string() })
 const Evaluation = z.object({ passed: z.boolean(), feedback: z.string() })
 const replyWithReview = new Pipeline({ id: "reply-review", inputSchema: Request })
   .step({
     id: "draft",
-    run: ({ input }) => ask("Write a concise, empathetic reply.", input.request),
+    run: async ({ input }) =>
+      (await askAi(`Write a concise, empathetic reply to: ${input.request}`)).text,
   })
   .step({
     id: "evaluate",
     run: async ({ input: reply }) => {
-      const result = await generateCompletion({
-        instructions: "Is it concise and empathetic?",
-        prompt: reply,
-        model,
-        outputSchema: Evaluation,
-      })
-      return { reply, ...result.output }
+      const result = await askAiJson(
+        reply,
+        Evaluation,
+        "Is it concise and empathetic?",
+      )
+      return { reply, ...Evaluation.parse(result.output) }
     },
   })
   .step({
     id: "revise",
-    run: ({ input }) =>
-      input.passed ? input.reply : ask("Revise: " + input.feedback, input.reply),
+    run: async ({ input }) =>
+      input.passed
+        ? input.reply
+        : (await askAi(`Revise using this feedback: ${input.feedback}\n\nReply: ${input.reply}`)).text,
   })
 
 console.log((await replyWithReview.run({ input: { request: "Customer's order arrived broken" } })).output)

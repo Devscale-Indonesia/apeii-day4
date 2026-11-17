@@ -7,7 +7,7 @@
  */
 import { Pipeline } from "@anvia/core/pipeline";
 import z from "zod";
-import { ask } from "./helpers";
+import { askAi } from "./shared";
 
 const summarize = new Pipeline({
   id: "summarize",
@@ -16,7 +16,8 @@ const summarize = new Pipeline({
   .step({ id: "clean", run: ({ input }) => input.text.trim() })
   .step({
     id: "summarize",
-    run: ({ input }) => ask("Summarize in one sentence.", input),
+    run: async ({ input }) =>
+      (await askAi(`Summarize in one sentence: ${input}`)).text,
   })
 
 const { output } = await summarize.run({

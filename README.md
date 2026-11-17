@@ -37,4 +37,4 @@ bun run typecheck
 | `07-assistant-decision.ts` | Decide an action, then act |
 | `08-observer.ts` | `observer.onEvent` and `graph()` |
 
-`01`–`03` and `index.ts` are the versions taught in class and use `askAi` from `shared.ts`. The rest use `ask()` and the stubbed `tavilyClient` from `helpers.ts`.
+`01`–`03` and `index.ts` are the versions taught in class and use `askAi` from `shared.ts`. The rest use the same helpers (`askAi`, `askAiJson`). `04-extract-company.ts` stubs Tavily inline.

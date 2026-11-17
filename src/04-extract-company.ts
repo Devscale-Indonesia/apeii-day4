@@ -8,7 +8,7 @@
  */
 import { Pipeline } from "@anvia/core/pipeline";
 import z from "zod";
-import { tavilyClient, model } from "./helpers";
+import { model } from "./shared";
 
 const CompanySchema = z.object({
   name: z.string().describe("Legal company name"),
@@ -16,6 +16,18 @@ const CompanySchema = z.object({
   address: z.string().describe("Company address"),
   stockTicker: z.string().describe("Stock ticker"),
 })
+// Stub supaya contoh jalan tanpa API key Tavily. Ganti dengan client Tavily asli.
+const tavilyClient = {
+  async search(company: string) {
+    return {
+      results: [
+        {
+          content: `${company} is a company. Slogan: "Think different". HQ: Cupertino, CA. Ticker: AAPL.`,
+        },
+      ],
+    };
+  },
+};
 const Query = z.object({ company: z.string() })
 
 const companyInfo = new Pipeline({ id: "company-info", inputSchema: Query })
