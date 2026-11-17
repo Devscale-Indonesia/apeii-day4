@@ -35,11 +35,10 @@ Pola-pola di bawah adalah blok bangunan dasar. Produk nyata biasanya menggabungk
 bun install
 ```
 
-Buat file `.env`:
+Salin `.env.example` jadi `.env`, lalu isi nilainya:
 
-```
-OPENAI_BASE_URL=...
-OPENAI_API_KEY=...
+```bash
+cp .env.example .env
 ```
 
 ## Menjalankan
