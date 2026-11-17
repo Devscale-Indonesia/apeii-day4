@@ -1,25 +1,33 @@
-# AI Product Engineering III — Day 4
+# AI Product Engineering III — Day 4: Agentic Workflows
 
-Workflow patterns with [Anvia](https://www.npmjs.com/package/@anvia/core) `Pipeline`: chaining, routing, extraction, evaluator-optimizer, parallel fan-out, plan-and-execute, and observability.
+Tujuh pola workflow yang umum dipakai, dibangun dengan `Pipeline` dari [Anvia](https://www.npmjs.com/package/@anvia/core): chaining, routing, extraction, evaluator-optimizer, parallel fan-out, plan-and-execute, dan agentic decision. Ditambah observability untuk memantau jalannya pipeline.
 
-Each file in `src/` is a small, runnable example and starts with an Indonesian comment block (APA / KENAPA / ALUR / CATATAN) explaining what it does and why.
+Setiap file di `src/` adalah contoh kecil yang bisa langsung dijalankan. Di bagian atas tiap file ada komentar berbahasa Indonesia (APA / KENAPA / ALUR / CATATAN) yang menjelaskan isi dan alasannya. Screenshot di bawah diambil dari slide Day 4.
 
-## Why workflows?
+## Kenapa workflow?
 
-A single big prompt is hard to debug and gives unpredictable results. A **workflow** breaks the job into small steps where code controls the flow and the LLM does one focused task per step. You get:
+Satu prompt besar sulit di-debug dan hasilnya sulit diprediksi. **Workflow** memecah pekerjaan jadi langkah-langkah kecil: kode yang mengatur alurnya, dan LLM hanya mengerjakan satu tugas fokus di tiap langkah. Hasilnya:
 
-- **Reliability:** each step is simple, so each answer is better.
-- **Debuggability:** you can see which step went wrong.
-- **Control:** the code decides what happens next, not the model.
+- **Lebih andal:** tiap langkah sederhana, jadi jawabannya lebih baik.
+- **Mudah di-debug:** kelihatan di langkah mana yang salah.
+- **Terkendali:** kode yang memutuskan langkah berikutnya, bukan model.
 
-The patterns below are the building blocks. Real products combine them.
+![Workflow vs agent](docs/slides/workflow-vs-agent.png)
 
-## Core ideas
+Pola-pola di bawah adalah blok bangunan dasar. Produk nyata biasanya menggabungkan beberapa sekaligus.
 
-- **`Pipeline`** is a list of steps. Each step gets the previous step's output as `input`.
-- **`inputSchema`** (zod) validates the input before anything runs.
-- **Structured output:** pass a zod schema to `askAiJson` and the model replies with typed JSON, not free text. This is what lets plain code (`if`, `switch`, `Promise.all`) make decisions from model output.
-- **Step types used here:** `.step` (run any code), `.parallel` (run branches at once), `.extract` (turn text into a schema).
+![Tujuh pola](docs/slides/seven-patterns.png)
+
+## Konsep inti
+
+- **`Pipeline`** adalah daftar langkah (step). Setiap step menerima output step sebelumnya sebagai `input`.
+- **`inputSchema`** (zod) memvalidasi input sebelum apa pun dijalankan.
+- **Structured output:** kirim schema zod ke `askAiJson`, maka model membalas JSON bertipe, bukan teks bebas. Inilah yang membuat kode biasa (`if`, `switch`, `Promise.all`) bisa mengambil keputusan dari output model.
+- **Jenis stage yang dipakai:** `.step` (jalankan kode apa saja), `.parallel` (jalankan beberapa cabang bersamaan), `.extract` (ubah teks jadi schema).
+
+![Anatomi pipeline](docs/slides/pipeline-anatomy.png)
+
+![Helper dan stage](docs/slides/helpers-and-stages.png)
 
 ## Setup
 
@@ -27,80 +35,113 @@ The patterns below are the building blocks. Real products combine them.
 bun install
 ```
 
-Create a `.env` file:
+Buat file `.env`:
 
 ```
 OPENAI_BASE_URL=...
 OPENAI_API_KEY=...
 ```
 
-## Run
+## Menjalankan
 
 ```bash
 bun src/<file>.ts
 bun run typecheck
 ```
 
-## Patterns
+## Pola
 
-### Prompt chaining — `01-prompt-chaining.ts`, `00-basic-pipeline.ts`
-Output of one step feeds the next.
-**Why:** a big task ("research a company") is split into easy steps that are each checkable.
-**Use when:** the task has clear sequential stages.
-`generate-query → web-search → summarize`
+### 1. Prompt chaining — `01-prompt-chaining.ts`, `00-basic-pipeline.ts`
 
-### Routing — `02-router.ts`
-The model classifies the input, then code sends it to the right path.
-**Why:** different requests need different handling; specialized prompts beat one generic prompt.
-**Use when:** inputs fall into distinct categories (technical, billing, general).
-`classify intent → pick handler`
+Output satu langkah menjadi input langkah berikutnya.
 
-### Parallel fan-out — `03-parallel-fanout.ts`
-Independent branches run at the same time, then results are combined.
-**Why:** faster than running one after another, and each branch stays focused on one viewpoint.
-**Use when:** subtasks do not depend on each other.
-`product | engineering | business → summarize`
+- **Kenapa:** tugas besar ("riset perusahaan") dipecah jadi langkah mudah yang bisa dicek satu per satu.
+- **Pakai saat:** tugas punya tahapan berurutan yang jelas.
+- **Alur:** `generate-query → web-search → summarize`
 
-### Extraction — `04-extract-company.ts`
-Turn messy text (search results) into a typed object with `.extract`.
-**Why:** structured data can be stored, validated, and displayed; free text cannot.
-**Tip:** `.describe()` on schema fields guides the model, and "return NONE if missing" stops it inventing facts.
-`search → extract`
+![Prompt chaining](docs/slides/prompt-chaining.png)
 
-### Evaluator-optimizer — `05-evaluator-optimizer.ts`
-One call writes, another judges, and a third revises only if needed.
-**Why:** first drafts often miss the bar; a cheap review step raises quality without a human.
-**Use when:** you have clear quality criteria.
-`draft → evaluate → revise`
+### 2. Routing — `02-router.ts`
 
-### Plan-and-execute — `06-plan-and-execute.ts`
-The model plans first, then each planned step is carried out.
-**Why:** separating thinking from doing keeps big goals on track. Unlike `.parallel`, the number of steps is decided by the model at runtime.
-`plan → execute each step`
+Model mengklasifikasikan input, lalu kode mengarahkannya ke jalur yang tepat.
 
-### Decision step — `07-assistant-decision.ts`
-The model picks one action from a fixed list, and code runs it.
-**Why:** a first step toward agents. The model chooses, but the allowed actions are limited, so behavior stays predictable and safe.
-`decide (answer | search | handoff) → act`
+- **Kenapa:** setiap jenis permintaan butuh penanganan berbeda. Prompt khusus lebih baik daripada satu prompt umum.
+- **Pakai saat:** input terbagi ke kategori yang jelas (teknis, tagihan, umum).
+- **Alur:** `klasifikasi intent → pilih handler`
+
+![Router](docs/slides/router.png)
+
+### 3. Extraction — `04-extract-company.ts`
+
+Mengubah teks berantakan (hasil pencarian) jadi object bertipe dengan `.extract`.
+
+- **Kenapa:** data terstruktur bisa disimpan, divalidasi, dan ditampilkan. Teks bebas tidak bisa.
+- **Tips:** `.describe()` pada field schema menjadi petunjuk untuk model. Instruksi "return NONE jika tidak ada" mencegah model mengarang data.
+- **Alur:** `search → extract`
+
+![Extraction](docs/slides/extraction.png)
+
+### 4. Evaluator-optimizer — `05-evaluator-optimizer.ts`
+
+Satu panggilan menulis, satu menilai, dan satu merevisi hanya jika perlu.
+
+- **Kenapa:** draf pertama sering belum memenuhi standar. Satu langkah review yang murah menaikkan kualitas tanpa campur tangan manusia.
+- **Pakai saat:** ada kriteria kualitas yang jelas.
+- **Alur:** `draft → evaluate → revise`
+
+![Evaluator-optimizer](docs/slides/evaluator-optimizer.png)
+
+### 5. Parallel fan-out — `03-parallel-fanout.ts`
+
+Cabang-cabang yang independen berjalan bersamaan, lalu hasilnya digabung.
+
+- **Kenapa:** lebih cepat daripada berurutan, dan tiap cabang fokus pada satu sudut pandang.
+- **Pakai saat:** sub-tugas tidak saling bergantung.
+- **Alur:** `product | engineering | business → summarize`
+
+![Parallel fan-out](docs/slides/parallel-fanout.png)
+
+### 6. Plan-and-execute — `06-plan-and-execute.ts`
+
+Model membuat rencana dulu, lalu setiap langkah rencana dikerjakan.
+
+- **Kenapa:** memisahkan "berpikir" dari "mengerjakan" menjaga tujuan besar tetap terarah. Berbeda dari `.parallel`, jumlah langkahnya ditentukan model saat runtime.
+- **Alur:** `plan → execute tiap langkah`
+
+![Plan and execute](docs/slides/plan-and-execute.png)
+
+### 7. Agentic decision — `07-assistant-decision.ts`
+
+Model memilih satu aksi dari daftar yang terbatas, lalu kode menjalankannya.
+
+- **Kenapa:** langkah awal menuju agent. Model yang memilih, tapi aksi yang boleh dipilih dibatasi, sehingga perilakunya tetap bisa diprediksi dan aman.
+- **Alur:** `decide (answer | search | handoff) → act`
+
+![Agentic decision](docs/slides/agentic-decision.png)
 
 ### Observability — `08-observer.ts`
-Watch each step as it runs with `observer.onEvent`, and inspect the pipeline shape with `graph()`.
-**Why:** AI flows feel like black boxes; events show what ran, when, and where it failed.
 
-## Files
+Pantau tiap step saat berjalan dengan `observer.onEvent`, dan lihat bentuk pipeline dengan `graph()`.
 
-| File | What it is |
+- **Kenapa:** alur AI sering terasa seperti kotak hitam. Event menunjukkan apa yang jalan, kapan, dan di mana gagal.
+
+![Observability](docs/slides/observability.png)
+
+## Daftar file
+
+| File | Isi |
 |---|---|
-| `index.ts` | Pipeline basics scratchpad from class |
-| `01-prompt-chaining.ts` | Class example: chaining |
-| `02-router.ts` | Class example: routing |
-| `03-parallel-fanout.ts` | Class example: parallel |
-| `00-basic-pipeline.ts` | Minimal two-step pipeline |
-| `04-extract-company.ts` | Extraction (Tavily stubbed inline) |
-| `05-evaluator-optimizer.ts` | Draft, evaluate, revise |
-| `06-plan-and-execute.ts` | Plan, then execute |
-| `07-assistant-decision.ts` | Decide, then act |
-| `08-observer.ts` | Events and graph |
-| `shared.ts` | Model setup plus `askAi` and `askAiJson` helpers |
+| `index.ts` | Scratchpad dasar pipeline dari kelas |
+| `01-prompt-chaining.ts` | Contoh kelas: chaining |
+| `02-router.ts` | Contoh kelas: routing |
+| `03-parallel-fanout.ts` | Contoh kelas: parallel |
+| `00-basic-pipeline.ts` | Pipeline minimal dua langkah |
+| `04-extract-company.ts` | Extraction (Tavily di-stub di dalam file) |
+| `05-evaluator-optimizer.ts` | Draft, evaluasi, revisi |
+| `06-plan-and-execute.ts` | Rencana, lalu eksekusi |
+| `07-assistant-decision.ts` | Putuskan, lalu bertindak |
+| `08-observer.ts` | Event dan graph |
+| `shared.ts` | Setup model plus helper `askAi` dan `askAiJson` |
+| `docs/slides/` | Screenshot slide Day 4 yang dipakai di README ini |
 
-`01`–`03` and `index.ts` are the versions taught in class. They contain TODO placeholders (web search, summarize, routing handlers) that are filled in live.
+`01`–`03` dan `index.ts` adalah versi yang diajarkan di kelas. Di dalamnya masih ada placeholder TODO (web search, summarize, handler routing) yang diisi langsung saat kelas berlangsung.
