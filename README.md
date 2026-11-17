@@ -18,11 +18,11 @@ OPENAI_API_KEY=...
 ## Run
 
 ```bash
-bun src/examples/<file>.ts
+bun src/<file>.ts
 bun run typecheck
 ```
 
-## Examples (`src/examples/`)
+## Examples (`src/`)
 
 | File | Pattern |
 |---|---|

@@ -1,5 +1,5 @@
 import { generateCompletion } from "@anvia/core";
-import { model } from "../shared";
+import { model } from "./shared";
 
 export { generateCompletion, model };
 
