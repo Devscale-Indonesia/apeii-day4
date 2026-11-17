@@ -1,3 +1,11 @@
+/**
+ * APA: Mengubah teks mentah (hasil pencarian web) jadi data terstruktur dengan `.extract`.
+ * KENAPA: Hasil search berupa teks berantakan. Dengan schema zod, kita dapat object rapi
+ *         (name, slogan, address, stockTicker) yang bisa disimpan ke database atau ditampilkan.
+ * ALUR: nama perusahaan -> search (Tavily, di sini di-stub) -> extract (AI isi schema dari teks)
+ * CATATAN: `.describe()` di tiap field adalah petunjuk untuk AI. Instruksi "return NONE"
+ *          mencegah AI mengarang data yang tidak ada di sumber.
+ */
 import { Pipeline } from "@anvia/core/pipeline";
 import z from "zod";
 import { tavilyClient, model } from "./helpers";

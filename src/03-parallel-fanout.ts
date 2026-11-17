@@ -1,3 +1,11 @@
+/**
+ * APA: Parallel fan-out. Satu input dikerjakan banyak "cabang" sekaligus, lalu hasilnya digabung.
+ * KENAPA: Perspektif product, engineering, dan business tidak saling bergantung, jadi jalan
+ *         bareng. Lebih cepat daripada berurutan, dan tiap cabang fokus pada satu sudut pandang.
+ * ALUR: ide -> .parallel { product | engineering | business } -> summarize (gabungkan 3 POV)
+ * CATATAN: Input step `summarize` adalah object berisi hasil semua cabang
+ *          ({ product, engineering, business }), makanya kita JSON.stringify sebelum dikirim ke AI.
+ */
 import { Pipeline } from "@anvia/core/pipeline";
 import z from "zod";
 import { askAi } from "./shared";

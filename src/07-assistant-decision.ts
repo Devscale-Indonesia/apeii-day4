@@ -1,3 +1,11 @@
+/**
+ * APA: Asisten sederhana yang memutuskan sendiri tindakan berikutnya: jawab, cari, atau serahkan ke tim.
+ * KENAPA: Ini langkah awal menuju agent: AI menentukan alur, tapi kita tetap memegang kendali
+ *         lewat daftar aksi yang terbatas (enum), jadi perilakunya bisa diprediksi dan aman.
+ * ALUR: userInput -> decide (AI pilih: answer | search | handoff) -> act (kode menjalankan aksinya)
+ * CATATAN: Aksi search dan handoff di sini masih placeholder. Di produksi, isi dengan
+ *          pemanggilan tool atau pembuatan task sungguhan.
+ */
 import { Pipeline } from "@anvia/core/pipeline";
 import z from "zod";
 import { ask, generateCompletion, model } from "./helpers";

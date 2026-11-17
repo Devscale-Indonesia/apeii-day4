@@ -1,3 +1,13 @@
+/**
+ * APA: Prompt chaining. Hasil satu langkah jadi bahan untuk langkah berikutnya.
+ * KENAPA: Tugas besar ("riset perusahaan") sulit dijawab dengan satu prompt. Dipecah jadi
+ *         langkah kecil, hasil tiap langkah lebih akurat dan bisa kita cek satu per satu.
+ * ALUR: nama perusahaan -> generate-query (AI buat query pencarian)
+ *                       -> web-search (cari di web, masih TODO)
+ *                       -> summarize (ringkas hasil, masih TODO)
+ * CATATAN: `askAiJson` + schema zod membuat AI membalas JSON terstruktur (bukan teks bebas),
+ *          sehingga step berikutnya bisa langsung memakai `queries` tanpa parsing manual.
+ */
 import { Pipeline } from "@anvia/core/pipeline";
 import z from "zod";
 import { askAiJson } from "./shared";
